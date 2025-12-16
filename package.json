@@ -1,0 +1,18 @@
+{
+  "name": "sistema-reserva-root",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix integraciones run dev",
+    "install": "npm --prefix integraciones install",
+    "build": "npm --prefix integraciones run build",
+    "start": "npm --prefix integraciones run start"
+  },
+  "dependencies": {
+    "next": "^16.0.10"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6"
+  }
+}
