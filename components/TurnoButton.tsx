@@ -230,25 +230,33 @@ export function TurnoButton() {
               📅 {new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
 
-            <div className="flex flex-col md:flex-row items-start justify-between gap-6">
-              <div className="w-full md:w-48 flex-shrink-0 md:order-2">
-                <label className="mb-2 block text-sm font-bold text-gray-800">📍 Filtrar por Comuna</label>
-                <select
-                  value={selectedComuna}
-                  onChange={(e) => setSelectedComuna(e.target.value)}
-                  className="mb-3 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 focus:border-red-500 focus:outline-none font-medium"
-                >
-                  <option value="">Todas las comunas ({comunas.length})</option>
-                  {comunas.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-                <div className="rounded-xl bg-blue-50 p-4 border border-blue-100 text-xs text-blue-800 hidden md:block">
-                  <p><strong>Nota:</strong> Mostrando farmacias con turno activo para hoy.</p>
+            <div className="flex flex-col gap-6">
+              {/* Filter Section - Top */}
+              <div className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    📍 Filtrar por Comuna:
+                  </label>
+                  <div className="relative w-full sm:w-64">
+                    <select
+                      value={selectedComuna}
+                      onChange={(e) => setSelectedComuna(e.target.value)}
+                      className="w-full appearance-none rounded-lg border-2 border-slate-200 bg-white py-2 pl-4 pr-10 text-sm font-medium text-gray-700 focus:border-red-500 focus:outline-none"
+                    >
+                      <option value="">Todas las comunas ({comunas.length})</option>
+                      {comunas.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex-1 w-full md:order-1">
+              {/* List Section - Full Width */}
+              <div className="flex-1 min-h-[300px]">
                 {errorMessage ? (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
                     <p className="text-lg font-bold text-red-700 mb-2">¡Ups! Algo salió mal</p>
@@ -265,9 +273,12 @@ export function TurnoButton() {
                   </div>
                 ) : farmacias.length > 0 ? (
                   <div>
-                    <div className="mb-4 flex items-center justify-between">
+                    <div className="mb-4 flex items-center justify-between px-2">
                       <p className="text-sm font-medium text-gray-500">
-                        Resultados encontrados: <span className="text-gray-900 font-bold">{filtered.length}</span>
+                        Mostrando farmacias de turno para hoy
+                      </p>
+                      <p className="text-sm font-bold text-gray-900 border-b-2 border-red-500 pb-0.5">
+                        {filtered.length} Resultados
                       </p>
                     </div>
                     <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
@@ -286,21 +297,23 @@ export function TurnoButton() {
                             <h3 className="text-xl font-bold text-gray-900 leading-tight">
                               {farmacia.nombre_local}
                             </h3>
-                            <div className="mt-3 flex flex-col gap-1 text-sm text-gray-600">
-                              <p className="flex items-center gap-2">
-                                <span>📍</span> {farmacia.direccion}
-                              </p>
-                              <p className="flex items-center gap-2">
-                                <span>📞</span> {farmacia.telefono}
-                              </p>
-                            </div>
-
-                            {(farmacia.hora_apertura || farmacia.hora_cierre) && (
-                              <div className="mt-4 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-green-800 text-xs font-bold border border-green-100 w-fit">
-                                <span>🕐 Horario de Turno:</span>
-                                <span>{farmacia.hora_apertura} - {farmacia.hora_cierre}</span>
+                            <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-gray-600">
+                              <div className="space-y-1">
+                                <p className="flex items-center gap-2">
+                                  <span>📍</span> {farmacia.direccion}
+                                </p>
+                                <p className="flex items-center gap-2">
+                                  <span>📞</span> {farmacia.telefono}
+                                </p>
                               </div>
-                            )}
+
+                              {(farmacia.hora_apertura || farmacia.hora_cierre) && (
+                                <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-green-800 text-xs font-bold border border-green-100 w-fit whitespace-nowrap">
+                                  <span className="text-lg">🕒</span>
+                                  <span>{farmacia.hora_apertura} - {farmacia.hora_cierre}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -308,11 +321,11 @@ export function TurnoButton() {
                   </div>
                 ) : (
                   <div className="py-12 text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-3xl">
+                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-4xl">
                       💊
                     </div>
-                    <p className="text-lg font-semibold text-gray-700">No se encontraron farmacias</p>
-                    <p className="text-gray-500 text-sm">Prueba cambiando el filtro de comuna.</p>
+                    <p className="text-xl font-bold text-gray-800 mb-2">No se encontraron farmacias</p>
+                    <p className="text-gray-500">Prueba cambiando el filtro de comuna o intenta más tarde.</p>
                   </div>
                 )}
               </div>
