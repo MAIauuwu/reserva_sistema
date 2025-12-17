@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema de Reservas de Tutorías
 
-## Getting Started
+Este es un sistema de reservas desarrollado con [Next.js](https://nextjs.org) y [Firebase](https://firebase.google.com/), diseñado con una estética moderna en tonos pasteles.
 
-First, run the development server:
+## Características
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- 📅 **Calendario de Reservas**: Visualización clara de cupos disponibles.
+- 🛒 **Carrito de Compras**: Permite seleccionar múltiples tutorías antes de confirmar.
+- 👥 **Roles de Usuario**: Soporte para Profesores y Alumnos.
+- 📧 **Notificaciones**: Confirmaciones por correo electrónico (simulado/real según configuración).
+- 💅 **UI Moderna**: Diseño responsivo con Tailwind CSS y colores pasteles.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Configuración Local
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1.  Clona el repositorio.
+2.  Instala dependencias:
+    ```bash
+    npm install
+    ```
+3.  Crea un archivo `.env.local` en la raíz con tus credenciales de Firebase:
+    ```env
+    NEXT_PUBLIC_FIREBASE_API_KEY=...
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+    NEXT_PUBLIC_FIREBASE_APP_ID=...
+    NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=...
+    ```
+4.  Corre el servidor de desarrollo:
+    ```bash
+    npm run dev
+    ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Despliegue en Vercel
 
-## Learn More
+La forma más fácil de desplegar es usando la [Plataforma Vercel](https://vercel.com/new).
 
-To learn more about Next.js, take a look at the following resources:
+1.  Sube tu código a GitHub.
+2.  En Vercel, importa tu repositorio.
+3.  **IMPORTANTE**: En la sección "Environment Variables", agrega las mismas variables que tienes en tu `.env.local`.
+4.  Haz clic en **Deploy**.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FMAIauuw%2Freserva_sistema)
