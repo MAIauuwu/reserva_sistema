@@ -11,6 +11,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { ProfessorDashboard } from "@/components/ProfessorDashboard";
 import { AvailableSlots } from "@/components/AvailableSlots";
 import { TurnoButton } from "@/components/TurnoButton";
+import { Cart } from "@/components/Cart";
 
 type BookingCalendarProps = {
   email: string;
@@ -210,9 +211,9 @@ export default function Home() {
 
   const activeUser = sessionUser?.email
     ? {
-        email: sessionUser.email,
-        name: sessionUser.displayName || "Tu cuenta",
-      }
+      email: sessionUser.email,
+      name: sessionUser.displayName || "Tu cuenta",
+    }
     : simulatedUser;
 
   return (
@@ -235,7 +236,7 @@ export default function Home() {
         userRole={userRole}
         onLogout={handleLogout}
       />
-      
+
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 md:px-8">
         {currentView === "dashboard" && userRole === "profesor" && sessionUser ? (
           <ProfessorDashboard user={sessionUser} />
@@ -270,56 +271,56 @@ export default function Home() {
         ) : currentView === "calendario" ? (
           <>
             <header className="rounded-3xl bg-pastel-light p-10 text-center shadow-2xl">
-          <div className="mx-auto flex w-fit items-center gap-3 rounded-full bg-pastel-accent px-5 py-2 text-sm font-semibold text-pastel-dark">
-            <Calendar className="h-4 w-4" />
-            Ideal para academias y estudios creativos
-          </div>
-          <h1 className="mt-6 text-5xl font-extrabold text-pastel-dark">
-            Sistema de Reservas para tus clases
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-            Gestiona horarios, confirma asistencia y envía emails en minutos.
-            Todo con colores pasteles, un flujo elegante y sin complicaciones.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <button
-              className="w-full rounded-full border border-pastel-primary/60 py-3 text-lg font-semibold text-pastel-dark transition hover:bg-pastel-highlight sm:w-auto sm:px-8"
-              onClick={() =>
-                document
-                  .getElementById("calendario")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              Ver calendario
-            </button>
-          </div>
-        </header>
-
-        <section className="grid gap-8 md:grid-cols-[3fr,2fr]" id="calendario">
-          <div className="space-y-6">
-            <BookingCalendar
-              email={activeUser.email}
-              name={activeUser.name}
-              canBook={Boolean(sessionUser?.email)}
-            />
-            <AvailableSlots user={sessionUser} />
-          </div>
-          <div className="glass-card pastel-border flex flex-col gap-6 rounded-2xl p-6 shadow-xl">
-            {perks.map((perk) => (
-              <div key={perk.title} className="flex items-start gap-4">
-                <div className="rounded-2xl bg-pastel-accent p-3 text-pastel-dark">
-                  <perk.icon className="h-6 w-6" />
-                </div>
-                <div>
-                  <h4 className="text-lg font-semibold text-pastel-dark">
-                    {perk.title}
-                  </h4>
-                  <p className="text-sm text-gray-600">{perk.description}</p>
-                </div>
+              <div className="mx-auto flex w-fit items-center gap-3 rounded-full bg-pastel-accent px-5 py-2 text-sm font-semibold text-pastel-dark">
+                <Calendar className="h-4 w-4" />
+                Ideal para academias y estudios creativos
               </div>
-            ))}
-          </div>
-        </section>
+              <h1 className="mt-6 text-5xl font-extrabold text-pastel-dark">
+                Sistema de Reservas para tus clases
+              </h1>
+              <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+                Gestiona horarios, confirma asistencia y envía emails en minutos.
+                Todo con colores pasteles, un flujo elegante y sin complicaciones.
+              </p>
+              <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <button
+                  className="w-full rounded-full border border-pastel-primary/60 py-3 text-lg font-semibold text-pastel-dark transition hover:bg-pastel-highlight sm:w-auto sm:px-8"
+                  onClick={() =>
+                    document
+                      .getElementById("calendario")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  Ver calendario
+                </button>
+              </div>
+            </header>
+
+            <section className="grid gap-8 md:grid-cols-[3fr,2fr]" id="calendario">
+              <div className="space-y-6">
+                <BookingCalendar
+                  email={activeUser.email}
+                  name={activeUser.name}
+                  canBook={Boolean(sessionUser?.email)}
+                />
+                <AvailableSlots user={sessionUser} />
+              </div>
+              <div className="glass-card pastel-border flex flex-col gap-6 rounded-2xl p-6 shadow-xl">
+                {perks.map((perk) => (
+                  <div key={perk.title} className="flex items-start gap-4">
+                    <div className="rounded-2xl bg-pastel-accent p-3 text-pastel-dark">
+                      <perk.icon className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-pastel-dark">
+                        {perk.title}
+                      </h4>
+                      <p className="text-sm text-gray-600">{perk.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           </>
         ) : (
           <div className="glass-card pastel-border rounded-2xl p-8 text-center shadow-xl">
@@ -365,6 +366,7 @@ export default function Home() {
           />
         )}
       </div>
+      <Cart />
     </main>
   );
 }

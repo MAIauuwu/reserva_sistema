@@ -6,12 +6,11 @@ import {
   query,
   where,
   onSnapshot,
-  updateDoc,
-  doc,
 } from "firebase/firestore";
 import { db } from "@/firebase/client-config";
-import { Calendar, Users, UserPlus } from "lucide-react";
+import { Calendar, Users, ShoppingCart } from "lucide-react";
 import { User as FirebaseUser } from "firebase/auth";
+import { useCart } from "@/context/CartContext";
 
 type Props = {
   user: FirebaseUser | null;
@@ -30,7 +29,7 @@ type Slot = {
 
 export function AvailableSlots({ user }: Props) {
   const [slots, setSlots] = useState<Slot[]>([]);
-  const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const { addToCart, items } = useCart();
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,39 +62,15 @@ export function AvailableSlots({ user }: Props) {
     return () => unsubscribe();
   }, []);
 
-  const handleJoinSlot = async (slotId: string, currentStudents: string[]) => {
-    if (!user?.email) {
-      setMessage("❌ Debes iniciar sesión para unirte a un cupo.");
-      return;
-    }
+  // const handleJoinSlot logic removed in favor of Cart
 
-    if (currentStudents.includes(user.email)) {
-      setMessage("✅ Ya estás inscrito en este cupo.");
-      return;
-    }
-
-    try {
-      setLoading((prev) => ({ ...prev, [slotId]: true }));
-      setMessage(null);
-
-      const slotRef = doc(db, "cupos", slotId);
-      const updatedStudents = [...currentStudents, user.email];
-
-      await updateDoc(slotRef, {
-        students: updatedStudents,
-        status:
-          updatedStudents.length >= (slots.find((s) => s.id === slotId)?.maxStudents || 10)
-            ? "full"
-            : "open",
-      });
-
-      setMessage("✅ Te has unido al cupo exitosamente.");
-    } catch (error) {
-      console.error("Error al unirse al cupo:", error);
-      setMessage("❌ No se pudo unir al cupo. Intenta nuevamente.");
-    } finally {
-      setLoading((prev) => ({ ...prev, [slotId]: false }));
-    }
+  const handleAddToCart = (slot: Slot) => {
+    addToCart({
+      id: slot.id,
+      date: slot.date,
+      professorName: slot.professorName,
+      professorEmail: slot.professorEmail
+    });
   };
 
   return (
@@ -116,11 +91,10 @@ export function AvailableSlots({ user }: Props) {
 
       {message && (
         <p
-          className={`text-sm ${
-            message.startsWith("✅")
-              ? "text-green-600"
-              : "text-action-danger"
-          }`}
+          className={`text-sm ${message.startsWith("✅")
+            ? "text-green-600"
+            : "text-action-danger"
+            }`}
         >
           {message}
         </p>
@@ -178,14 +152,12 @@ export function AvailableSlots({ user }: Props) {
                       </span>
                     ) : (
                       <button
-                        onClick={() =>
-                          handleJoinSlot(slot.id, slot.students)
-                        }
-                        disabled={loading[slot.id] || !user}
-                        className="flex items-center gap-2 rounded-full bg-pastel-primary px-4 py-2 text-xs font-semibold text-pastel-dark transition hover:bg-pastel-highlight disabled:opacity-60"
+                        onClick={() => handleAddToCart(slot)}
+                        disabled={items.some(i => i.id === slot.id)}
+                        className="flex items-center gap-2 rounded-full bg-pastel-primary px-4 py-2 text-xs font-semibold text-pastel-dark transition hover:bg-pastel-highlight disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        <UserPlus className="h-4 w-4" />
-                        {loading[slot.id] ? "Uniendo..." : "Unirse"}
+                        <ShoppingCart className="h-4 w-4" />
+                        {items.some(i => i.id === slot.id) ? "En el carrito" : "Agregar"}
                       </button>
                     )}
                   </div>
