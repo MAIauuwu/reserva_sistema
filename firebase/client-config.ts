@@ -2,23 +2,23 @@ import { getApp, getApps, initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDXpb5fB4Tjlj59CwAhySMF6EhsBtNhAzw",
-  authDomain: "moodfeed-eab30.firebaseapp.com",
-  projectId: "moodfeed-eab30",
-  storageBucket: "moodfeed-eab30.firebasestorage.app",
-  messagingSenderId: "617243220622",
-  appId: "1:617243220622:web:bb30552ba4aa1125b0c7df",
-  measurementId: "G-FREC2GS763"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
+
 
 const requiredKeys: Array<keyof typeof firebaseConfig> = [
   "apiKey",
   "authDomain",
   "projectId",
-  "storageBucket",
-  "messagingSenderId",
-  "appId",
+  "appId", 
 ];
 
 const missingKey = requiredKeys.find(
@@ -27,12 +27,9 @@ const missingKey = requiredKeys.find(
 
 if (missingKey) {
   throw new Error(
-    `Falta la variable de entorno Firebase: ${missingKey}`
+    `Falta la variable de entorno Firebase: NEXT_PUBLIC_FIREBASE_${missingKey.toUpperCase()}`
   );
 }
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig as any);
 

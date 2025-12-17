@@ -1,21 +1,4 @@
 {
-<<<<<<< HEAD
-  "name": "sistema-reserva-root",
-  "private": true,
-  "scripts": {
-    "dev": "npm --prefix integraciones run dev",
-    "install": "npm --prefix integraciones install",
-    "build": "npm --prefix integraciones run build",
-    "start": "npm --prefix integraciones run start"
-  },
-  "dependencies": {
-    "next": "^16.0.10"
-  },
-  "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "jest": "^30.2.0",
-    "ts-jest": "^29.4.6"
-=======
   "name": "integraciones",
   "version": "0.1.0",
   "private": true,
@@ -38,6 +21,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
@@ -46,6 +30,5 @@
     "tailwindcss": "^4",
     "ts-jest": "^29.4.6",
     "typescript": "^5"
->>>>>>> 1e8090e2e5f4fa877fa6f0b650e8967e1ff14fda
   }
 }
