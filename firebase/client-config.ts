@@ -26,8 +26,8 @@ const missingKey = requiredKeys.find(
 );
 
 if (missingKey) {
-  throw new Error(
-    `Falta la variable de entorno Firebase: NEXT_PUBLIC_FIREBASE_${missingKey.toUpperCase()}`
+  console.warn(
+    `Advertencia: Falta la variable de entorno Firebase: NEXT_PUBLIC_FIREBASE_${missingKey.toUpperCase()}. La aplicación podría no funcionar correctamente.`
   );
 }
 
