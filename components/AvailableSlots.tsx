@@ -26,6 +26,8 @@ type Slot = {
   professorEmail: string;
   professorName: string;
   description?: string;
+  price?: number;
+  allowedModalities?: ("online" | "presencial")[];
   status: "open" | "full" | "closed";
 };
 
@@ -52,7 +54,10 @@ export function AvailableSlots({ user }: Props) {
           students: data.students || [],
           professorEmail: data.professorEmail,
           professorName: data.professorName,
+          professorName: data.professorName,
           description: data.description,
+          price: data.price || 15000,
+          allowedModalities: data.allowedModalities || ["online"],
           status: data.status || "open",
         } as Slot;
       });
@@ -67,24 +72,37 @@ export function AvailableSlots({ user }: Props) {
   }, []);
 
   const handleAddToCart = (slot: Slot) => {
+    // Default to first available modality or online
+    const defaultModality = slot.allowedModalities?.[0] || "online";
+
     addToCart({
       id: slot.id,
       date: slot.date,
       professorName: slot.professorName,
       professorEmail: slot.professorEmail,
-      description: slot.description
+      description: slot.description,
+      price: slot.price || 15000,
+      modality: defaultModality
     });
   };
 
   const seedProfessors = async () => {
     try {
       setIsSeeding(true);
+
+      const randomModalities = () => {
+        const r = Math.random();
+        if (r < 0.33) return ["online"];
+        if (r < 0.66) return ["presencial"];
+        return ["online", "presencial"];
+      }
+
       const professors = [
-        { name: "Dr. Gregory House", email: "house@princeton.edu", desc: "Diagnóstico Diferencial y Casos Complejos" },
-        { name: "Lic. Walter White", email: "heisenberg@chem.com", desc: "Química Avanzada y Procesos" },
-        { name: "Prof. Minerva McGonagall", email: "minerva@hogwarts.edu", desc: "Transformaciones y Disciplina Estricta" },
-        { name: "Tony Stark", email: "tony@stark.com", desc: "Ingeniería, Mecatrónica y Futuro" },
-        { name: "Dra. Ellen Ripley", email: "ripley@nostromo.space", desc: "Supervivencia y Manejo de Crisis" }
+        { name: "Dr. Gregory House", email: "house@princeton.edu", desc: "Diagnóstico Diferencial y Casos Complejos", price: 25000 },
+        { name: "Lic. Walter White", email: "heisenberg@chem.com", desc: "Química Avanzada y Procesos", price: 15000 },
+        { name: "Prof. Minerva McGonagall", email: "minerva@hogwarts.edu", desc: "Transformaciones y Disciplina Estricta", price: 18000 },
+        { name: "Tony Stark", email: "tony@stark.com", desc: "Ingeniería, Mecatrónica y Futuro", price: 50000 },
+        { name: "Dra. Ellen Ripley", email: "ripley@nostromo.space", desc: "Supervivencia y Manejo de Crisis", price: 15000 }
       ];
 
       const baseDate = new Date();
@@ -99,6 +117,8 @@ export function AvailableSlots({ user }: Props) {
           professorName: prof.name,
           professorEmail: prof.email,
           description: prof.desc,
+          price: prof.price,
+          allowedModalities: randomModalities(),
           date: date.toISOString().slice(0, 16), // Format for datetime-local
           maxStudents: 5,
           students: [],
@@ -189,6 +209,16 @@ export function AvailableSlots({ user }: Props) {
                         {slot.description}
                       </div>
                     )}
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-bold">
+                        ${(slot.price || 15000).toLocaleString("es-CL")}
+                      </span>
+                      {slot.allowedModalities?.map(m => (
+                        <span key={m} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full capitalize">
+                          {m}
+                        </span>
+                      ))}
+                    </div>
                     <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />

@@ -8,11 +8,14 @@ export type CartItem = {
     professorName: string;
     professorEmail: string;
     description?: string;
+    price: number;
+    modality: "online" | "presencial";
 };
 
 type CartContextType = {
     items: CartItem[];
     addToCart: (item: CartItem) => void;
+    updateItemModality: (itemId: string, modality: "online" | "presencial") => void;
     removeFromCart: (itemId: string) => void;
     clearCart: () => void;
     isOpen: boolean;
@@ -34,6 +37,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setIsOpen(true);
     };
 
+    const updateItemModality = (itemId: string, modality: "online" | "presencial") => {
+        setItems((prev) => prev.map((item) =>
+            item.id === itemId ? { ...item, modality } : item
+        ));
+    };
+
     const removeFromCart = (itemId: string) => {
         setItems((prev) => prev.filter((item) => item.id !== itemId));
     };
@@ -42,7 +51,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const toggleCart = () => setIsOpen((prev) => !prev);
 
     return (
-        <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, isOpen, toggleCart }}>
+        <CartContext.Provider value={{ items, addToCart, updateItemModality, removeFromCart, clearCart, isOpen, toggleCart }}>
             {children}
         </CartContext.Provider>
     );
