@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
-import { X, ShoppingCart, Trash2, CreditCard, ArrowRightLeft } from "lucide-react";
+import { X, ShoppingCart, Trash2, CreditCard, ArrowRightLeft, FileText, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/firebase/client-config";
@@ -55,6 +55,19 @@ export function Cart() {
                 });
             }));
 
+            // Enviar correo de confirmación
+            await fetch("/api/send-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: formData.email,
+                    name: formData.name,
+                    items: items,
+                    total: totalPrice,
+                    paymentMethod
+                }),
+            });
+
             // Limpiar y éxito
             setSuccess(true);
             clearCart();
@@ -63,7 +76,7 @@ export function Cart() {
                 setStep("review");
                 setPaymentMethod(null);
                 toggleCart();
-            }, 3000);
+            }, 4000);
 
         } catch (error) {
             console.error("Error en checkout", error);
@@ -145,8 +158,8 @@ export function Cart() {
                                                         type="button"
                                                         onClick={() => updateItemModality(item.id, "online")}
                                                         className={`px-2 py-1 text-xs rounded-full border transition ${item.modality === "online"
-                                                                ? "bg-pastel-primary text-pastel-dark border-pastel-primary"
-                                                                : "bg-white text-gray-500 border-gray-200 hover:border-pastel-primary"
+                                                            ? "bg-pastel-primary text-pastel-dark border-pastel-primary"
+                                                            : "bg-white text-gray-500 border-gray-200 hover:border-pastel-primary"
                                                             }`}
                                                     >
                                                         Online
@@ -155,8 +168,8 @@ export function Cart() {
                                                         type="button"
                                                         onClick={() => updateItemModality(item.id, "presencial")}
                                                         className={`px-2 py-1 text-xs rounded-full border transition ${item.modality === "presencial"
-                                                                ? "bg-pastel-primary text-pastel-dark border-pastel-primary"
-                                                                : "bg-white text-gray-500 border-gray-200 hover:border-pastel-primary"
+                                                            ? "bg-pastel-primary text-pastel-dark border-pastel-primary"
+                                                            : "bg-white text-gray-500 border-gray-200 hover:border-pastel-primary"
                                                             }`}
                                                     >
                                                         Presencial
@@ -201,47 +214,73 @@ export function Cart() {
                             </div>
                         ) : (
                             <div className="flex-1 space-y-6 animate-in slide-in-from-right">
-                                <div className="bg-pastel-secondary/30 p-4 rounded-xl border border-pastel-primary/20">
-                                    <p className="text-sm text-gray-600 mb-1">Total a pagar</p>
-                                    <p className="text-3xl font-extrabold text-pastel-dark">${totalPrice.toLocaleString("es-CL")}</p>
-                                    <p className="text-xs text-gray-500 mt-1">{items.length} tutoría(s)</p>
+                                {/* Cotización Header */}
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-3 opacity-10">
+                                        <FileText className="h-24 w-24 text-pastel-dark" />
+                                    </div>
+                                    <div className="relative z-10">
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Cotización de Servicio</p>
+                                        <h3 className="text-3xl font-black text-pastel-dark mb-1">${totalPrice.toLocaleString("es-CL")}</h3>
+                                        <p className="text-sm text-gray-500">{items.length} servicios seleccionados</p>
+                                    </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <p className="font-semibold text-pastel-dark">Selecciona método de pago</p>
+                                {/* Detalle de Cotización */}
+                                <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                                    <p className="text-xs font-bold text-gray-500 uppercase px-1">Detalle del costo</p>
+                                    {items.map((item, idx) => (
+                                        <div key={item.id + idx} className="flex justify-between items-center text-sm p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                            <div className="flex flex-col">
+                                                <span className="font-semibold text-gray-800">{item.professorName}</span>
+                                                <span className="text-xs text-gray-500 flex items-center gap-1">
+                                                    {item.modality === 'online' ? '🌐 Online' : '📍 Presencial'} • {item.description || "Asesoría"}
+                                                </span>
+                                            </div>
+                                            <span className="font-bold text-gray-700">${item.price.toLocaleString("es-CL")}</span>
+                                        </div>
+                                    ))}
+                                    <div className="border-t border-dashed border-gray-300 pt-3 flex justify-between items-center px-3">
+                                        <span className="font-bold text-gray-800">Total Final</span>
+                                        <span className="font-bold text-pastel-primary text-lg">${totalPrice.toLocaleString("es-CL")}</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 pt-2">
+                                    <p className="font-semibold text-pastel-dark">Método de pago seguro</p>
 
                                     <button
                                         type="button"
                                         onClick={() => setPaymentMethod("webpay")}
-                                        className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition ${paymentMethod === "webpay"
-                                                ? "border-pastel-primary bg-pastel-primary/10"
-                                                : "border-gray-100 hover:border-pastel-primary/50"
+                                        className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition group ${paymentMethod === "webpay"
+                                                ? "border-pastel-primary bg-pastel-primary/5"
+                                                : "border-gray-100 hover:border-pastel-primary/50 hover:bg-white"
                                             }`}
                                     >
                                         <span className="flex items-center gap-3 font-medium text-gray-700">
-                                            <div className="bg-orange-500 text-white p-2 rounded-lg">
+                                            <div className={`p-2 rounded-lg transition ${paymentMethod === 'webpay' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-orange-100 group-hover:text-orange-600'}`}>
                                                 <CreditCard className="h-5 w-5" />
                                             </div>
                                             WebPay (Crédito/Débito)
                                         </span>
-                                        {paymentMethod === "webpay" && <div className="h-3 w-3 bg-pastel-primary rounded-full" />}
+                                        {paymentMethod === "webpay" && <CheckCircle2 className="h-5 w-5 text-pastel-primary" />}
                                     </button>
 
                                     <button
                                         type="button"
                                         onClick={() => setPaymentMethod("transfer")}
-                                        className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition ${paymentMethod === "transfer"
-                                                ? "border-pastel-primary bg-pastel-primary/10"
-                                                : "border-gray-100 hover:border-pastel-primary/50"
+                                        className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition group ${paymentMethod === "transfer"
+                                                ? "border-pastel-primary bg-pastel-primary/5"
+                                                : "border-gray-100 hover:border-pastel-primary/50 hover:bg-white"
                                             }`}
                                     >
                                         <span className="flex items-center gap-3 font-medium text-gray-700">
-                                            <div className="bg-blue-500 text-white p-2 rounded-lg">
+                                            <div className={`p-2 rounded-lg transition ${paymentMethod === 'transfer' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'}`}>
                                                 <ArrowRightLeft className="h-5 w-5" />
                                             </div>
                                             Transferencia Bancaria
                                         </span>
-                                        {paymentMethod === "transfer" && <div className="h-3 w-3 bg-pastel-primary rounded-full" />}
+                                        {paymentMethod === "transfer" && <CheckCircle2 className="h-5 w-5 text-pastel-primary" />}
                                     </button>
                                 </div>
                             </div>
