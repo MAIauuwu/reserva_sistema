@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent, useMemo } from "react";
-import { X, UserRound, GraduationCap, ArrowRight, LogIn, UserPlus } from "lucide-react";
+import { X, LogIn, UserPlus } from "lucide-react";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "@/firebase/client-config";
 import { FirebaseError } from "firebase/app";
@@ -118,9 +118,9 @@ export function AuthSidebar({ isOpen, onClose, onAuthenticated }: Props) {
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-2xl font-bold text-pastel-dark flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         {mode === "login" ? <LogIn className="h-6 w-6" /> : <UserPlus className="h-6 w-6" />}
-                        {mode === "login" ? "Iniciar Sesión" : "Crear Cuenta"}
+                        {mode === "login" ? "Inicia sesión" : "Crear Cuenta"}
                     </h2>
                     <button onClick={onClose} className="rounded-full p-2 hover:bg-gray-100 transition">
                         <X className="h-6 w-6" />
@@ -149,20 +149,20 @@ export function AuthSidebar({ isOpen, onClose, onAuthenticated }: Props) {
                     {mode === "login" ? (
                         <form onSubmit={handleLogin} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                                <label className="block text-sm font-bold text-black mb-1">Correo Electrónico</label>
                                 <input
                                     type="email"
-                                    className="w-full rounded-xl border border-gray-200 p-3 focus:border-pastel-primary focus:outline-none transition bg-gray-50"
+                                    className="w-full rounded-xl border border-gray-300 p-3 text-black focus:border-pastel-primary focus:outline-none transition bg-white"
                                     placeholder="ejemplo@correo.com"
                                     value={loginForm.email}
                                     onChange={e => setLoginForm({ ...loginForm, email: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                                <label className="block text-sm font-bold text-black mb-1">Contraseña</label>
                                 <input
                                     type="password"
-                                    className="w-full rounded-xl border border-gray-200 p-3 focus:border-pastel-primary focus:outline-none transition bg-gray-50"
+                                    className="w-full rounded-xl border border-gray-300 p-3 text-black focus:border-pastel-primary focus:outline-none transition bg-white"
                                     placeholder="••••••••"
                                     value={loginForm.password}
                                     onChange={e => setLoginForm({ ...loginForm, password: e.target.value })}
@@ -179,30 +179,30 @@ export function AuthSidebar({ isOpen, onClose, onAuthenticated }: Props) {
                     ) : (
                         <form onSubmit={handleRegister} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                                <label className="block text-sm font-bold text-black mb-1">Nombre Completo</label>
                                 <input
                                     type="text"
-                                    className="w-full rounded-xl border border-gray-200 p-3 focus:border-pastel-primary focus:outline-none transition bg-gray-50"
+                                    className="w-full rounded-xl border border-gray-300 p-3 text-black focus:border-pastel-primary focus:outline-none transition bg-white"
                                     placeholder="Tu nombre"
                                     value={registerForm.name}
                                     onChange={e => setRegisterForm({ ...registerForm, name: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                                <label className="block text-sm font-bold text-black mb-1">Correo Electrónico</label>
                                 <input
                                     type="email"
-                                    className="w-full rounded-xl border border-gray-200 p-3 focus:border-pastel-primary focus:outline-none transition bg-gray-50"
+                                    className="w-full rounded-xl border border-gray-300 p-3 text-black focus:border-pastel-primary focus:outline-none transition bg-white"
                                     placeholder="ejemplo@correo.com"
                                     value={registerForm.email}
                                     onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                                <label className="block text-sm font-bold text-black mb-1">Contraseña</label>
                                 <input
                                     type="password"
-                                    className="w-full rounded-xl border border-gray-200 p-3 focus:border-pastel-primary focus:outline-none transition bg-gray-50"
+                                    className="w-full rounded-xl border border-gray-300 p-3 text-black focus:border-pastel-primary focus:outline-none transition bg-white"
                                     placeholder="Mínimo 6 caracteres"
                                     value={registerForm.password}
                                     onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })}

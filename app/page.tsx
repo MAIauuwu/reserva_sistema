@@ -213,13 +213,14 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-pastel-secondary py-12">
-      <div className="fixed top-6 right-6 z-50 flex items-center gap-4">
+      <div className="fixed top-6 right-0 left-0 z-50 mx-auto w-fit max-w-4xl rounded-full bg-white/80 p-2 shadow-xl backdrop-blur-md flex items-center gap-2 sm:gap-4">
         <button
           onClick={toggleCart}
-          className="flex items-center gap-2 rounded-full bg-pastel-primary px-6 py-3 text-sm font-bold uppercase tracking-wide text-pastel-dark shadow-xl transition hover:bg-pastel-highlight hover:scale-105"
+          className="flex items-center gap-2 rounded-full bg-pastel-primary px-4 py-2 sm:px-6 sm:py-3 text-sm font-bold uppercase tracking-wide text-pastel-dark shadow-sm transition hover:bg-pastel-highlight hover:scale-105"
         >
-          <ShoppingCart className="h-5 w-5" />
-          Compra tu asesoría
+          <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="hidden sm:inline">Compra tu asesoría</span>
+          <span className="sm:hidden">Asesoría</span>
           {items.length > 0 && (
             <span className="ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-extrabold text-pastel-dark">
               {items.length}
@@ -229,14 +230,14 @@ export default function Home() {
         <div>
           {!sessionUser && (
             <button
-              className="rounded-full bg-white/50 border-2 border-white px-6 py-3 text-sm font-semibold uppercase tracking-wide text-pastel-dark shadow-xl transition hover:bg-white hover:scale-105"
+              className="rounded-full bg-pastel-primary px-4 py-2 sm:px-6 sm:py-3 text-sm font-bold uppercase tracking-wide text-pastel-dark shadow-sm transition hover:bg-pastel-highlight hover:scale-105"
               onClick={() => setShowAuthSidebar(true)}
             >
-              Acceso Alumnos
+              Inicia sesión
             </button>
           )}
           {sessionUser && (
-            <div className="flex items-center gap-2 bg-white/50 px-4 py-2 rounded-full border border-white">
+            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-100 shadow-inner">
               <span className="text-sm font-bold text-pastel-dark">{sessionUser.email}</span>
             </div>
           )}
