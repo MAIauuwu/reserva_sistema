@@ -198,7 +198,7 @@ export default function Home() {
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-white/60 backdrop-blur-md shadow-sm">
 
         {/* LOGO / TITLE */}
-        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 tracking-tight">
+        <h1 className="text-3xl font-extrabold text-[#d8b4fe] tracking-tight drop-shadow-sm">
           Reserva tu tutoría
         </h1>
 
