@@ -6,13 +6,12 @@ import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { useCart } from "@/context/CartContext";
 import { onAuthStateChanged, type User, signOut } from "firebase/auth";
 import { auth, db } from "@/firebase/client-config";
-import { ClientRegistration } from "@/components/ClientRegistration";
-import { RoleLoginModal } from "@/components/RoleLoginModal";
 import { Sidebar } from "@/components/Sidebar";
 import { ProfessorDashboard } from "@/components/ProfessorDashboard";
 import { AvailableSlots } from "@/components/AvailableSlots";
 import { TurnoButton } from "@/components/TurnoButton";
 import { Cart } from "@/components/Cart";
+import { AuthSidebar } from "@/components/AuthSidebar";
 
 type BookingCalendarProps = {
   email: string;
@@ -148,15 +147,19 @@ function BookingCalendar({ email, name, canBook }: BookingCalendarProps) {
 
 export default function Home() {
   const { toggleCart, items } = useCart();
-  const [showRegistration, setShowRegistration] = useState(false);
   const [viewerEmail, setViewerEmail] = useState("");
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showAuthSidebar, setShowAuthSidebar] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [sessionUser, setSessionUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState("calendario");
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  const normalizedViewerEmail = viewerEmail.trim();
+  const activeUser = sessionUser?.email
+    ? {
+      email: sessionUser.email,
+      name: sessionUser.displayName || "Tu cuenta",
+    }
+    : simulatedUser;
 
   useEffect(() => {
     if (!toast) return;
@@ -169,7 +172,6 @@ export default function Home() {
       setSessionUser(user);
       if (user?.email) {
         setViewerEmail(user.email);
-        // Obtener el rol del usuario desde Firestore
         try {
           const clientesQuery = query(
             collection(db, "clientes"),
@@ -202,21 +204,12 @@ export default function Home() {
   };
 
   const handleViewChange = (view: string) => {
-    if (view === "login") {
-      setShowLoginModal(true);
-    } else if (view === "registro") {
-      setCurrentView("registro");
+    if (view === "login" || view === "registro") {
+      setShowAuthSidebar(true);
     } else {
       setCurrentView(view);
     }
   };
-
-  const activeUser = sessionUser?.email
-    ? {
-      email: sessionUser.email,
-      name: sessionUser.displayName || "Tu cuenta",
-    }
-    : simulatedUser;
 
   return (
     <main className="min-h-screen bg-pastel-secondary py-12">
@@ -234,12 +227,19 @@ export default function Home() {
           )}
         </button>
         <div>
-          <button
-            className="rounded-full bg-action-danger px-6 py-3 text-sm font-semibold uppercase tracking-wide text-black shadow-xl transition hover:bg-red-700"
-            onClick={() => setShowLoginModal(true)}
-          >
-            Registrar alumno
-          </button>
+          {!sessionUser && (
+            <button
+              className="rounded-full bg-white/50 border-2 border-white px-6 py-3 text-sm font-semibold uppercase tracking-wide text-pastel-dark shadow-xl transition hover:bg-white hover:scale-105"
+              onClick={() => setShowAuthSidebar(true)}
+            >
+              Acceso Alumnos
+            </button>
+          )}
+          {sessionUser && (
+            <div className="flex items-center gap-2 bg-white/50 px-4 py-2 rounded-full border border-white">
+              <span className="text-sm font-bold text-pastel-dark">{sessionUser.email}</span>
+            </div>
+          )}
         </div>
         <TurnoButton />
       </div>
@@ -254,35 +254,7 @@ export default function Home() {
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 md:px-8">
         {currentView === "dashboard" && userRole === "profesor" && sessionUser ? (
           <ProfessorDashboard user={sessionUser} />
-        ) : currentView === "registro" ? (
-          <div className="space-y-8">
-            <header className="rounded-3xl bg-pastel-light p-10 text-center shadow-2xl">
-              <div className="mx-auto flex w-fit items-center gap-3 rounded-full bg-pastel-accent px-5 py-2 text-sm font-semibold text-pastel-dark">
-                <Calendar className="h-4 w-4" />
-                Crea tu cuenta
-              </div>
-              <h1 className="mt-6 text-5xl font-extrabold text-pastel-dark">
-                Únete a nuestro sistema de reservas
-              </h1>
-              <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-                Regístrate como estudiante o profesor y comienza a gestionar tus clases de manera sencilla.
-              </p>
-            </header>
-            <div className="mx-auto max-w-2xl">
-              <ClientRegistration
-                onSuccess={(email, role) => {
-                  setToast(
-                    `✅ ${role} registrado correctamente. Revisa tu correo para iniciar sesión.`
-                  );
-                  setTimeout(() => {
-                    setCurrentView("calendario");
-                    setShowLoginModal(true);
-                  }, 2000);
-                }}
-              />
-            </div>
-          </div>
-        ) : currentView === "calendario" ? (
+        ) : (
           <>
             <header className="rounded-3xl bg-pastel-light p-10 text-center shadow-2xl">
               <div className="mx-auto flex w-fit items-center gap-3 rounded-full bg-pastel-accent px-5 py-2 text-sm font-semibold text-pastel-dark">
@@ -336,50 +308,24 @@ export default function Home() {
               </div>
             </section>
           </>
-        ) : (
-          <div className="glass-card pastel-border rounded-2xl p-8 text-center shadow-xl">
-            <h2 className="text-2xl font-bold text-pastel-dark">
-              Vista no disponible
-            </h2>
-            <p className="mt-2 text-gray-600">
-              Selecciona una opción del menú para continuar.
-            </p>
-          </div>
-        )}
-
-        {toast && (
-          <div className="pointer-events-none fixed left-1/2 top-8 z-40 -translate-x-1/2 rounded-full bg-pastel-dark/80 px-6 py-3 text-sm font-semibold text-white shadow-xl">
-            {toast}
-          </div>
-        )}
-        {showRegistration && (
-          <div className="rounded-2xl bg-pastel-light p-6 text-center text-sm text-gray-600 shadow">
-            ¡Estás en la sección de registro! Completa el formulario para empezar.
-          </div>
-        )}
-        {showLoginModal && (
-          <RoleLoginModal
-            onClose={() => setShowLoginModal(false)}
-            onAuthenticated={(email) => {
-              if (email) {
-                setViewerEmail(email);
-              }
-              setShowLoginModal(false);
-              setToast("Sesión iniciada. Ya puedes reservar tu clase.");
-              document
-                .getElementById("calendario")
-                ?.scrollIntoView({ behavior: "smooth" });
-            }}
-            onGoToRegister={() => {
-              setShowLoginModal(false);
-              setShowRegistration(true);
-              document
-                .getElementById("registro")
-                ?.scrollIntoView({ behavior: "smooth" });
-            }}
-          />
         )}
       </div>
+
+      {toast && (
+        <div className="pointer-events-none fixed left-1/2 top-8 z-40 -translate-x-1/2 rounded-full bg-pastel-dark/80 px-6 py-3 text-sm font-semibold text-white shadow-xl">
+          {toast}
+        </div>
+      )}
+
+      <AuthSidebar
+        isOpen={showAuthSidebar}
+        onClose={() => setShowAuthSidebar(false)}
+        onAuthenticated={(email) => {
+          setViewerEmail(email);
+          setToast(`¡Hola de nuevo, ${email}!`);
+        }}
+      />
+
       <Cart />
     </main>
   );
