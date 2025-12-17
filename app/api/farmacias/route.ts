@@ -1,89 +1,41 @@
 import { NextResponse } from 'next/server';
 
-const REMOTE_URL = 'https://midas.minsal.cl/farmacia_v2/WS/getLocalesTurnos.php';
-
-async function proxyFetch() {
-	// Try GET first, fallback to POST if needed
-	const defaultHeaders = {
-		Accept: 'application/json, text/plain, */*',
-		'User-Agent': 'Next.js Server Proxy',
-	} as Record<string, string>;
-
-	const controller = new AbortController();
-	const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-	let res = await fetch(REMOTE_URL, {
-		method: 'GET',
-		headers: defaultHeaders,
-		cache: 'no-store',
-		signal: controller.signal
-	}).finally(() => clearTimeout(timeoutId));
-
-	if (!res.ok) {
-		// Try POST as fallback
-		try {
-			const controllerPost = new AbortController();
-			const timeoutIdPost = setTimeout(() => controllerPost.abort(), 10000);
-
-			res = await fetch(REMOTE_URL, {
-				method: 'POST',
-				headers: { ...defaultHeaders, 'Content-Type': 'application/json' },
-				cache: 'no-store',
-				signal: controllerPost.signal
-			}).finally(() => clearTimeout(timeoutIdPost));
-		} catch (e) {
-			// swallow and continue to error handling below
-		}
-	}
-
-	if (!res.ok) {
-		const text = await res.text().catch(() => '');
-		return { ok: false, status: res.status, body: text };
-	}
-
-	// Attempt to parse JSON, fallback to text
-	try {
-		const data = await res.json();
-		return { ok: true, data };
-	} catch (e) {
-		const text = await res.text().catch(() => '');
-		// Try parse JSON from text
-		try {
-			const parsed = JSON.parse(text || 'null');
-			return { ok: true, data: parsed };
-		} catch (e2) {
-			console.error('[Proxy] Could not parse JSON from:', text.slice(0, 200));
-			return { ok: false, status: 502, body: text };
-		}
-	}
-}
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
 	try {
-		const result = await proxyFetch();
-		if (!result.ok) {
-			return NextResponse.json({
-				success: false,
-				error: result.body || 'Remote API error',
-				status: result.status ?? 502,
-				rawBody: result.body
-			}, { status: 502 });
+		const REMOTE_API = 'https://midas.minsal.cl/farmacia_v2/WS/getLocalesTurnos.php';
+
+		const response = await fetch(REMOTE_API, {
+			method: 'GET',
+			headers: {
+				'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+				'Accept': 'application/json',
+			},
+			next: { revalidate: 3600 } // Cache for 1 hour to reduce load/errors
+		});
+
+		if (!response.ok) {
+			throw new Error(`External API responded with ${response.status}`);
 		}
 
-		// Return both structured and raw formats
-		const responseData = Array.isArray(result.data) ? result.data : result.data?.data || [];
-		return NextResponse.json(responseData, { status: 200 });
-	} catch (err) {
-		console.error('[Proxy] Error:', err);
-		return NextResponse.json({
-			success: false,
-			error: 'Internal server error',
-			details: err instanceof Error ? err.message : String(err)
-		}, { status: 500 });
-	}
-}
+		const text = await response.text();
+		// Sometimes the API returns text with BOM or weird encoding, but usually standard JSON string.
 
-export async function POST() {
-	// Mirror GET behavior for POST requests from client
-	return GET();
+		try {
+			const json = JSON.parse(text);
+			return NextResponse.json(json);
+		} catch (parseError) {
+			console.error('Error parsing JSON from external API:', parseError);
+			console.error('Raw response snippet:', text.slice(0, 200));
+			return NextResponse.json({ error: 'Invalid JSON from source', raw: text.slice(0, 500) }, { status: 502 });
+		}
+
+	} catch (error) {
+		console.error('Error fetching farmacias:', error);
+		return NextResponse.json(
+			{ error: 'Failed to fetch data' },
+			{ status: 500 }
+		);
+	}
 }

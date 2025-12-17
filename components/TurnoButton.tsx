@@ -48,7 +48,7 @@ export function TurnoButton() {
   };
 
   const comunas = Array.from(new Set(farmacias.map((f) => f.comuna).filter(Boolean))).sort();
-  
+
   // Función para verificar si una farmacia está de turno hoy
   const isOpenToday = (farmacia: Farmacia): boolean => {
     if (!farmacia.fecha_inicio || !farmacia.fecha_termino) {
@@ -57,14 +57,14 @@ export function TurnoButton() {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     try {
       // Parsear fechas (puede ser DD/MM/YYYY o YYYY-MM-DD)
       const parseDate = (dateStr: string): Date => {
-        const parts = dateStr.includes('/') 
+        const parts = dateStr.includes('/')
           ? dateStr.split('/')
           : dateStr.split('-');
-        
+
         if (dateStr.includes('/')) {
           // DD/MM/YYYY
           return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
@@ -76,7 +76,7 @@ export function TurnoButton() {
 
       const inicio = parseDate(farmacia.fecha_inicio);
       const termino = parseDate(farmacia.fecha_termino);
-      
+
       return today >= inicio && today <= termino;
     } catch (e) {
       console.warn('Error parsing dates for farmacia:', farmacia.nombre_local, e);
@@ -104,9 +104,9 @@ export function TurnoButton() {
           const text = await response.text().catch(() => '');
           setRawResponse(text);
           console.log('[Local Proxy] Response:', text.slice(0, 200));
-          
+
           const parsed = text ? JSON.parse(text) : null;
-          
+
           // Check if it's directly an array (new format)
           if (Array.isArray(parsed) && parsed.length > 0) {
             const normalized = (parsed as RawFarmacia[]).map(normalizeRaw);
@@ -115,7 +115,7 @@ export function TurnoButton() {
             setShowModal(true);
             return;
           }
-          
+
           // Check if it's { data: [...] } format (old format)
           const body = parsed as { success?: boolean; data?: RawFarmacia[]; error?: string } | null;
           if (body?.success && Array.isArray(body.data) && body.data.length > 0) {
@@ -136,11 +136,11 @@ export function TurnoButton() {
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(REMOTE_API)}`;
         const resp = await fetch(proxyUrl, { cache: 'no-store' });
         if (!resp.ok) throw new Error(`Status ${resp.status}`);
-        
+
         const text = await resp.text();
         setRawResponse(text);
         console.log('[Fallback 1] Response length:', text.length, 'First 300 chars:', text.slice(0, 300));
-        
+
         let parsed;
         try {
           parsed = JSON.parse(text);
@@ -230,76 +230,99 @@ export function TurnoButton() {
               📅 {new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
 
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                {errorMessage ? (
-                  <div className="rounded-md border border-red-200 bg-red-50 p-4">
-                    <p className="text-sm font-medium text-red-700">{errorMessage}</p>
-                    <p className="mt-2 text-xs text-red-600">Intenta recargar o vuelve más tarde.</p>
-                  </div>
-                ) : farmacias.length > 0 ? (
-                  <div>
-                    <div className="mb-4 flex items-center justify-between">
-                      <p className="text-sm text-gray-600">Resultados: <span className="font-medium text-gray-900">{filtered.length}</span></p>
-                    </div>
-                    <div className="space-y-4">
-                      {filtered.map((farmacia) => (
-                        <div
-                          key={farmacia.local_id}
-                          className="rounded-xl border border-gray-200 bg-gray-50 p-4 hover:bg-gray-100"
-                        >
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {farmacia.nombre_local}
-                          </h3>
-                          <p className="mt-2 text-sm text-gray-600">
-                            📍 {farmacia.direccion}, {farmacia.comuna}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            📞 {farmacia.telefono}
-                          </p>
-                          {(farmacia.fecha_inicio || farmacia.hora_apertura) && (
-                            <div className="mt-2 space-y-1">
-                              {farmacia.fecha_inicio && (
-                                <p className="text-xs text-blue-700 font-medium">
-                                  📅 Período: {farmacia.fecha_inicio} al {farmacia.fecha_termino || 'indefinido'}
-                                </p>
-                              )}
-                              {farmacia.hora_apertura && (
-                                <p className="text-xs text-green-700 font-medium">
-                                  🕐 Horario: {farmacia.hora_apertura} - {farmacia.hora_cierre || 'variable'}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-gray-600">No hay farmacias disponibles.</p>
-                )}
-              </div>
-
-              <div className="w-48 flex-shrink-0">
-                <label className="mb-2 block text-xs font-medium text-gray-800">Filtrar por comuna</label>
+            <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+              <div className="w-full md:w-48 flex-shrink-0 md:order-2">
+                <label className="mb-2 block text-sm font-bold text-gray-800">📍 Filtrar por Comuna</label>
                 <select
                   value={selectedComuna}
                   onChange={(e) => setSelectedComuna(e.target.value)}
-                  className="mb-3 w-full rounded-md border px-2 py-2 text-sm text-gray-800"
+                  className="mb-3 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 focus:border-red-500 focus:outline-none font-medium"
                 >
                   <option value="">Todas las comunas ({comunas.length})</option>
                   {comunas.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
+                <div className="rounded-xl bg-blue-50 p-4 border border-blue-100 text-xs text-blue-800 hidden md:block">
+                  <p><strong>Nota:</strong> Mostrando farmacias con turno activo para hoy.</p>
+                </div>
+              </div>
+
+              <div className="flex-1 w-full md:order-1">
+                {errorMessage ? (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+                    <p className="text-lg font-bold text-red-700 mb-2">¡Ups! Algo salió mal</p>
+                    <p className="text-sm text-red-600 mb-4">{errorMessage}</p>
+                    <button
+                      onClick={fetchFarmacias}
+                      className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-full text-sm font-bold transition"
+                    >
+                      Intentar de nuevo
+                    </button>
+                    <p className="mt-6 text-xs text-gray-500">
+                      Si el problema persiste, puedes visitar el sitio oficial del <a href="https://farmanet.minsal.cl/maps/" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">Minsal</a>.
+                    </p>
+                  </div>
+                ) : farmacias.length > 0 ? (
+                  <div>
+                    <div className="mb-4 flex items-center justify-between">
+                      <p className="text-sm font-medium text-gray-500">
+                        Resultados encontrados: <span className="text-gray-900 font-bold">{filtered.length}</span>
+                      </p>
+                    </div>
+                    <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+                      {filtered.map((farmacia) => (
+                        <div
+                          key={farmacia.local_id}
+                          className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md transition-all hover:border-red-100"
+                        >
+                          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition">
+                            <AlertCircle className="h-12 w-12 text-red-500" />
+                          </div>
+                          <div className="relative z-10">
+                            <span className="mb-1 inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-600">
+                              {farmacia.comuna}
+                            </span>
+                            <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                              {farmacia.nombre_local}
+                            </h3>
+                            <div className="mt-3 flex flex-col gap-1 text-sm text-gray-600">
+                              <p className="flex items-center gap-2">
+                                <span>📍</span> {farmacia.direccion}
+                              </p>
+                              <p className="flex items-center gap-2">
+                                <span>📞</span> {farmacia.telefono}
+                              </p>
+                            </div>
+
+                            {(farmacia.hora_apertura || farmacia.hora_cierre) && (
+                              <div className="mt-4 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-green-800 text-xs font-bold border border-green-100 w-fit">
+                                <span>🕐 Horario de Turno:</span>
+                                <span>{farmacia.hora_apertura} - {farmacia.hora_cierre}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-12 text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-3xl">
+                      💊
+                    </div>
+                    <p className="text-lg font-semibold text-gray-700">No se encontraron farmacias</p>
+                    <p className="text-gray-500 text-sm">Prueba cambiando el filtro de comuna.</p>
+                  </div>
+                )}
               </div>
             </div>
 
             <button
               onClick={() => setShowModal(false)}
-              className="mt-6 w-full rounded-full bg-gray-900 px-6 py-3 text-white font-semibold transition hover:bg-gray-800"
+              className="mt-6 w-full rounded-full bg-slate-900 px-6 py-4 text-white font-bold tracking-wide shadow-lg transition hover:bg-slate-800 hover:scale-[1.01]"
             >
-              Cerrar
+              Cerrar listado
             </button>
           </div>
         </div>
