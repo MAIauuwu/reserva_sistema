@@ -54,7 +54,6 @@ export function AvailableSlots({ user }: Props) {
           students: data.students || [],
           professorEmail: data.professorEmail,
           professorName: data.professorName,
-          professorName: data.professorName,
           description: data.description,
           price: data.price || 15000,
           allowedModalities: data.allowedModalities || ["online"],
