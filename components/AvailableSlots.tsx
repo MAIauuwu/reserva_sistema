@@ -6,9 +6,10 @@ import {
   query,
   where,
   onSnapshot,
+  addDoc,
 } from "firebase/firestore";
 import { db } from "@/firebase/client-config";
-import { Calendar, Users, ShoppingCart } from "lucide-react";
+import { Calendar, Users, ShoppingCart, Info, UserCheck } from "lucide-react";
 import { User as FirebaseUser } from "firebase/auth";
 import { useCart } from "@/context/CartContext";
 
@@ -24,6 +25,7 @@ type Slot = {
   students: string[];
   professorEmail: string;
   professorName: string;
+  description?: string;
   status: "open" | "full" | "closed";
 };
 
@@ -31,6 +33,7 @@ export function AvailableSlots({ user }: Props) {
   const [slots, setSlots] = useState<Slot[]>([]);
   const { addToCart, items } = useCart();
   const [message, setMessage] = useState<string | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   useEffect(() => {
     const slotsQuery = query(
@@ -49,6 +52,7 @@ export function AvailableSlots({ user }: Props) {
           students: data.students || [],
           professorEmail: data.professorEmail,
           professorName: data.professorName,
+          description: data.description,
           status: data.status || "open",
         } as Slot;
       });
@@ -62,15 +66,53 @@ export function AvailableSlots({ user }: Props) {
     return () => unsubscribe();
   }, []);
 
-  // const handleJoinSlot logic removed in favor of Cart
-
   const handleAddToCart = (slot: Slot) => {
     addToCart({
       id: slot.id,
       date: slot.date,
       professorName: slot.professorName,
-      professorEmail: slot.professorEmail
+      professorEmail: slot.professorEmail,
+      description: slot.description
     });
+  };
+
+  const seedProfessors = async () => {
+    try {
+      setIsSeeding(true);
+      const professors = [
+        { name: "Dr. Gregory House", email: "house@princeton.edu", desc: "Diagnóstico Diferencial y Casos Complejos" },
+        { name: "Lic. Walter White", email: "heisenberg@chem.com", desc: "Química Avanzada y Procesos" },
+        { name: "Prof. Minerva McGonagall", email: "minerva@hogwarts.edu", desc: "Transformaciones y Disciplina Estricta" },
+        { name: "Tony Stark", email: "tony@stark.com", desc: "Ingeniería, Mecatrónica y Futuro" },
+        { name: "Dra. Ellen Ripley", email: "ripley@nostromo.space", desc: "Supervivencia y Manejo de Crisis" }
+      ];
+
+      const baseDate = new Date();
+      baseDate.setHours(10, 0, 0, 0);
+
+      for (let i = 0; i < professors.length; i++) {
+        const prof = professors[i];
+        const date = new Date(baseDate);
+        date.setDate(date.getDate() + i + 1); // Un día diferente para cada uno
+
+        await addDoc(collection(db, "cupos"), {
+          professorName: prof.name,
+          professorEmail: prof.email,
+          description: prof.desc,
+          date: date.toISOString().slice(0, 16), // Format for datetime-local
+          maxStudents: 5,
+          students: [],
+          status: "open",
+          createdAt: new Date()
+        });
+      }
+      setMessage("✅ Profesores cargados exitosamente.");
+    } catch (e) {
+      console.error(e);
+      setMessage("❌ Error al cargar datos.");
+    } finally {
+      setIsSeeding(false);
+    }
   };
 
   return (
@@ -101,10 +143,19 @@ export function AvailableSlots({ user }: Props) {
       )}
 
       {slots.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          No hay cupos disponibles en este momento. Los profesores crearán nuevos
-          cupos pronto.
-        </p>
+        <div className="flex flex-col items-center justify-center gap-4 py-8 text-center">
+          <p className="text-sm text-gray-500">
+            No hay cupos disponibles en este momento.
+          </p>
+          <button
+            onClick={seedProfessors}
+            disabled={isSeeding}
+            className="flex items-center gap-2 rounded-xl bg-pastel-primary/20 px-4 py-2 text-sm font-semibold text-pastel-dark transition hover:bg-pastel-primary/40 disabled:opacity-50"
+          >
+            <UserCheck className="h-4 w-4" />
+            {isSeeding ? "Cargando..." : "Cargar Cupos de Ejemplo"}
+          </button>
+        </div>
       ) : (
         <div className="space-y-3">
           {slots.map((slot) => {
@@ -129,10 +180,16 @@ export function AvailableSlots({ user }: Props) {
                         })}
                       </p>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Profesor: {slot.professorName}
+                    <p className="font-bold text-pastel-dark">
+                      {slot.professorName}
                     </p>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                    {slot.description && (
+                      <div className="my-2 flex w-fit items-center gap-2 rounded-lg bg-pastel-secondary px-3 py-1.5 text-sm text-gray-600">
+                        <Info className="h-4 w-4 text-pastel-primary" />
+                        {slot.description}
+                      </div>
+                    )}
+                    <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
                         <span>
@@ -157,7 +214,7 @@ export function AvailableSlots({ user }: Props) {
                         className="flex items-center gap-2 rounded-full bg-pastel-primary px-4 py-2 text-xs font-semibold text-pastel-dark transition hover:bg-pastel-highlight disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         <ShoppingCart className="h-4 w-4" />
-                        {items.some(i => i.id === slot.id) ? "En el carrito" : "Agregar"}
+                        {items.some(i => i.id === slot.id) ? "En carrito" : "Agregar"}
                       </button>
                     )}
                   </div>
@@ -170,4 +227,3 @@ export function AvailableSlots({ user }: Props) {
     </div>
   );
 }
-

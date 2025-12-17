@@ -7,6 +7,7 @@ export type CartItem = {
     date: string;
     professorName: string;
     professorEmail: string;
+    description?: string;
 };
 
 type CartContextType = {

@@ -110,6 +110,9 @@ export function Cart() {
                                                 timeStyle: "short",
                                             })}
                                         </p>
+                                        {item.description && (
+                                            <p className="text-xs text-gray-400 italic mt-1 line-clamp-1">{item.description}</p>
+                                        )}
                                     </div>
                                     <button
                                         onClick={() => removeFromCart(item.id)}
