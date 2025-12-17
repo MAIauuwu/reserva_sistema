@@ -209,8 +209,8 @@ export function TurnoButton() {
       </button>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-8 shadow-2xl">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 sm:p-10 shadow-2xl custom-scrollbar">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <AlertCircle className="h-6 w-6 text-red-500" />
