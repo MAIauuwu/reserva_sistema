@@ -18,7 +18,7 @@ const requiredKeys: Array<keyof typeof firebaseConfig> = [
   "apiKey",
   "authDomain",
   "projectId",
-  "appId", 
+  "appId",
 ];
 
 const missingKey = requiredKeys.find(
@@ -32,4 +32,8 @@ if (missingKey) {
 }
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig as any);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+export { app, db, auth };
 
