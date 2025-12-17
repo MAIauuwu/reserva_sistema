@@ -123,7 +123,7 @@ export function AuthSidebar({ isOpen, onClose, onAuthenticated }: Props) {
                         {mode === "login" ? "Inicia sesión" : "Crear Cuenta"}
                     </h2>
                     <button onClick={onClose} className="rounded-full p-2 hover:bg-gray-100 transition">
-                        <X className="h-6 w-6" />
+                        <X className="h-6 w-6 text-black" strokeWidth={3} />
                     </button>
                 </div>
 
@@ -137,8 +137,8 @@ export function AuthSidebar({ isOpen, onClose, onAuthenticated }: Props) {
                                 type="button"
                                 onClick={() => mode === 'login' ? setLoginRole(r) : setRegisterForm({ ...registerForm, role: r })}
                                 className={`flex-1 py-2 text-sm font-semibold rounded-lg capitalize transition ${(mode === 'login' ? loginRole : registerForm.role) === r
-                                        ? "bg-white text-pastel-dark shadow-sm"
-                                        : "text-gray-500 hover:text-gray-700"
+                                    ? "bg-white text-pastel-dark shadow-sm"
+                                    : "text-gray-500 hover:text-gray-700"
                                     }`}
                             >
                                 {r}

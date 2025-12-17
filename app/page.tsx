@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, Clock3, MailCheck, Users, ShoppingCart } from "lucide-react";
+import { Calendar, Clock3, MailCheck, Users, ShoppingCart, LogIn, LayoutDashboard } from "lucide-react";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { useCart } from "@/context/CartContext";
 import { onAuthStateChanged, type User, signOut } from "firebase/auth";
 import { auth, db } from "@/firebase/client-config";
-import { Sidebar } from "@/components/Sidebar";
 import { ProfessorDashboard } from "@/components/ProfessorDashboard";
 import { AvailableSlots } from "@/components/AvailableSlots";
 import { TurnoButton } from "@/components/TurnoButton";
@@ -193,71 +192,80 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      setToast("Sesión cerrada correctamente.");
-      setCurrentView("calendario");
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
-  };
-
-  const handleViewChange = (view: string) => {
-    if (view === "login" || view === "registro") {
-      setShowAuthSidebar(true);
-    } else {
-      setCurrentView(view);
-    }
-  };
-
   return (
-    <main className="min-h-screen bg-pastel-secondary py-12">
-      <div className="fixed top-6 right-0 left-0 z-50 mx-auto w-fit max-w-4xl rounded-full bg-white/80 p-2 shadow-xl backdrop-blur-md flex items-center gap-2 sm:gap-4">
-        <button
-          onClick={toggleCart}
-          className="flex items-center gap-2 rounded-full bg-pastel-primary px-4 py-2 sm:px-6 sm:py-3 text-sm font-bold uppercase tracking-wide text-pastel-dark shadow-sm transition hover:bg-pastel-highlight hover:scale-105"
-        >
-          <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="hidden sm:inline">Compra tu asesoría</span>
-          <span className="sm:hidden">Asesoría</span>
-          {items.length > 0 && (
-            <span className="ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-extrabold text-pastel-dark">
-              {items.length}
-            </span>
-          )}
-        </button>
-        <div>
-          {!sessionUser && (
+    <main className="min-h-screen bg-pastel-secondary py-12 pt-28">
+      {/* Header Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-white/60 backdrop-blur-md shadow-sm">
+
+        {/* LOGO / TITLE */}
+        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 tracking-tight">
+          Reserva tu tutoría
+        </h1>
+
+        {/* ACTIONS */}
+        <div className="flex items-center gap-4">
+          {/* Professor Dashboard Link if applicable */}
+          {userRole === "profesor" && sessionUser && (
             <button
-              className="rounded-full bg-pastel-primary px-4 py-2 sm:px-6 sm:py-3 text-sm font-bold uppercase tracking-wide text-pastel-dark shadow-sm transition hover:bg-pastel-highlight hover:scale-105"
-              onClick={() => setShowAuthSidebar(true)}
+              onClick={() => setCurrentView("dashboard")}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-pastel-dark"
             >
-              Inicia sesión
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
             </button>
           )}
-          {sessionUser && (
-            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-100 shadow-inner">
-              <span className="text-sm font-bold text-pastel-dark">{sessionUser.email}</span>
+
+          <TurnoButton />
+
+          <button
+            onClick={toggleCart}
+            className="flex items-center gap-2 rounded-full bg-pastel-primary px-4 py-2 text-sm font-bold uppercase tracking-wide text-pastel-dark shadow-sm transition hover:bg-pastel-highlight hover:scale-105"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {items.length > 0 && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-extrabold text-pastel-dark">
+                {items.length}
+              </span>
+            )}
+            <span className="hidden sm:inline">Compra tu asesoría</span>
+          </button>
+
+          {!sessionUser ? (
+            <button
+              className="flex items-center gap-2 rounded-full bg-pastel-primary px-4 py-2 text-sm font-bold uppercase tracking-wide text-pastel-dark shadow-sm transition hover:bg-pastel-highlight hover:scale-105"
+              onClick={() => setShowAuthSidebar(true)}
+            >
+              <LogIn className="h-5 w-5" strokeWidth={2.5} />
+              Inicia sesión
+            </button>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-pastel-dark hidden sm:inline">{sessionUser.email}</span>
+              <button
+                onClick={() => signOut(auth)}
+                className="text-xs uppercase font-bold text-gray-500 hover:text-red-500"
+              >
+                Salir
+              </button>
             </div>
           )}
         </div>
-        <TurnoButton />
       </div>
-      <Sidebar
-        currentView={currentView}
-        onViewChange={handleViewChange}
-        user={sessionUser}
-        userRole={userRole}
-        onLogout={handleLogout}
-      />
 
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 md:px-8">
         {currentView === "dashboard" && userRole === "profesor" && sessionUser ? (
-          <ProfessorDashboard user={sessionUser} />
+          <div className="space-y-4">
+            <button
+              onClick={() => setCurrentView("calendario")}
+              className="text-sm text-gray-500 hover:underline"
+            >
+              ← Volver al sitio
+            </button>
+            <ProfessorDashboard user={sessionUser} />
+          </div>
         ) : (
           <>
-            <header className="rounded-3xl bg-pastel-light p-10 text-center shadow-2xl">
+            <header className="rounded-3xl bg-pastel-light p-10 text-center shadow-2xl mt-4">
               <div className="mx-auto flex w-fit items-center gap-3 rounded-full bg-pastel-accent px-5 py-2 text-sm font-semibold text-pastel-dark">
                 <Calendar className="h-4 w-4" />
                 Ideal para academias y estudios creativos

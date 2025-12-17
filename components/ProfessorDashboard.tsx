@@ -13,7 +13,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/firebase/client-config";
-import { Calendar, Users, Clock, X, CheckCircle, LayoutDashboard } from "lucide-react";
+import { Calendar, Users, LayoutDashboard, X, Sparkles, DollarSign } from "lucide-react";
 import { User as FirebaseUser } from "firebase/auth";
 
 type Props = {
@@ -30,6 +30,9 @@ type Slot = {
   professorName: string;
   status: "open" | "full" | "closed";
   createdAt: Date;
+  price: number;
+  description: string;
+  allowedModalities: string[];
 };
 
 export function ProfessorDashboard({ user }: Props) {
@@ -38,7 +41,10 @@ export function ProfessorDashboard({ user }: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     date: "",
-    maxStudents: 10,
+    maxStudents: 1,
+    price: 15000,
+    description: "",
+    allowedModalities: ["online"] as string[]
   });
 
   useEffect(() => {
@@ -63,6 +69,9 @@ export function ProfessorDashboard({ user }: Props) {
               ? "full"
               : data.status || "open",
           createdAt: data.createdAt?.toDate() || new Date(),
+          price: data.price || 0,
+          description: data.description || "",
+          allowedModalities: data.allowedModalities || ["online"]
         } as Slot;
       });
       setSlots(slotsData.sort((a, b) => a.date.localeCompare(b.date)));
@@ -79,21 +88,35 @@ export function ProfessorDashboard({ user }: Props) {
       setMessage("❌ Selecciona una fecha y hora.");
       return;
     }
+    if (formData.allowedModalities.length === 0) {
+      setMessage("❌ Selecciona al menos una modalidad.");
+      return;
+    }
 
     try {
       setLoading(true);
       await addDoc(collection(db, "cupos"), {
         date: formData.date,
         maxStudents: formData.maxStudents,
+        price: Number(formData.price),
+        description: formData.description || "Clase particular",
+        allowedModalities: formData.allowedModalities,
         students: [],
         professorEmail: user.email,
-        professorName: user.displayName || user.email,
+        professorName: user.displayName || user.email?.split("@")[0] || "Profesor",
         status: "open",
         createdAt: new Date(),
       });
 
-      setMessage("✅ Cupo creado exitosamente.");
-      setFormData({ date: "", maxStudents: 10 });
+      setMessage("✅ Cupo creado exitosamente con precio y detalles.");
+      // Reset form but keep defaults
+      setFormData({
+        date: "",
+        maxStudents: 1,
+        price: 15000,
+        description: "",
+        allowedModalities: ["online"]
+      });
     } catch (error) {
       console.error("Error al crear cupo:", error);
       setMessage("❌ No se pudo crear el cupo. Intenta nuevamente.");
@@ -126,28 +149,77 @@ export function ProfessorDashboard({ user }: Props) {
     }
   };
 
+  const loadFictitiousData = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+    const dateStr = tomorrow.toISOString().slice(0, 16); // format for datetime-local
+
+    setFormData({
+      date: dateStr,
+      maxStudents: 1,
+      price: 25000,
+      description: "Clase Intensiva de Matemáticas",
+      allowedModalities: ["online", "presencial"]
+    });
+    setMessage("✨ Datos de prueba cargados.");
+  };
+
+  const toggleModality = (modality: string) => {
+    setFormData(prev => {
+      const current = prev.allowedModalities;
+      if (current.includes(modality)) {
+        return { ...prev, allowedModalities: current.filter(m => m !== modality) };
+      } else {
+        return { ...prev, allowedModalities: [...current, modality] };
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="glass-card pastel-border rounded-2xl p-6 shadow-xl">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="rounded-full bg-pastel-accent p-3 text-pastel-dark">
-            <LayoutDashboard className="h-6 w-6" />
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-pastel-accent p-3 text-pastel-dark">
+              <LayoutDashboard className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-pastel-dark">
+                Dashboard Profesor
+              </h2>
+              <p className="text-sm text-gray-600">
+                Crea y gestiona tus clases
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-3xl font-bold text-pastel-dark">
-              Dashboard Profesor
-            </h2>
-            <p className="text-sm text-gray-600">
-              Crea y gestiona cupos para tus clases
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={loadFictitiousData}
+            className="flex items-center gap-2 text-xs font-bold text-pastel-primary hover:text-pastel-dark transition bg-white/50 px-3 py-2 rounded-full border border-pastel-primary/30"
+          >
+            <Sparkles className="h-4 w-4" />
+            Cargar datos ejemplo
+          </button>
         </div>
 
         <form onSubmit={handleCreateSlot} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-pastel-dark">
-                Fecha y hora del cupo
+                Título / Descripción
+              </label>
+              <input
+                type="text"
+                placeholder="Ej: Matemáticas Avanzadas"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="w-full rounded-xl border border-pastel-primary/40 bg-white/80 p-3 text-gray-800 placeholder:text-gray-400 focus:border-pastel-primary focus:outline-none"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-pastel-dark">
+                Fecha y hora
               </label>
               <input
                 type="datetime-local"
@@ -161,22 +233,48 @@ export function ProfessorDashboard({ user }: Props) {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-pastel-dark">
-                Cupos disponibles
+                Precio (CLP)
               </label>
-              <input
-                type="number"
-                min="1"
-                max="50"
-                value={formData.maxStudents}
-                onChange={(event) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    maxStudents: parseInt(event.target.value) || 10,
-                  }))
-                }
-                className="w-full rounded-xl border border-pastel-primary/40 bg-white/80 p-3 text-gray-800 placeholder:text-gray-400 focus:border-pastel-primary focus:outline-none"
-                required
-              />
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="number"
+                  value={formData.price}
+                  onChange={(event) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      price: parseInt(event.target.value) || 0,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-pastel-primary/40 bg-white/80 p-3 pl-10 text-gray-800 placeholder:text-gray-400 focus:border-pastel-primary focus:outline-none"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-pastel-dark block mb-2">
+                Modalidades
+              </label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer bg-white/60 px-3 py-2 rounded-lg border border-gray-100 hover:bg-white">
+                  <input
+                    type="checkbox"
+                    checked={formData.allowedModalities.includes("online")}
+                    onChange={() => toggleModality("online")}
+                    className="rounded text-pastel-primary focus:ring-pastel-primary"
+                  />
+                  <span className="text-sm text-gray-700">Online</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer bg-white/60 px-3 py-2 rounded-lg border border-gray-100 hover:bg-white">
+                  <input
+                    type="checkbox"
+                    checked={formData.allowedModalities.includes("presencial")}
+                    onChange={() => toggleModality("presencial")}
+                    className="rounded text-pastel-primary focus:ring-pastel-primary"
+                  />
+                  <span className="text-sm text-gray-700">Presencial</span>
+                </label>
+              </div>
             </div>
           </div>
           <button
@@ -184,17 +282,16 @@ export function ProfessorDashboard({ user }: Props) {
             disabled={loading}
             className="w-full rounded-full bg-pastel-primary py-3 font-semibold text-pastel-dark shadow-lg transition hover:bg-pastel-highlight disabled:opacity-60"
           >
-            {loading ? "Creando..." : "Crear cupo"}
+            {loading ? "Guardando..." : "Publicar Clase"}
           </button>
         </form>
 
         {message && (
           <p
-            className={`mt-4 text-sm ${
-              message.startsWith("✅")
+            className={`mt-4 text-center text-sm font-bold ${message.startsWith("✅")
                 ? "text-green-600"
                 : "text-action-danger"
-            }`}
+              }`}
           >
             {message}
           </p>
@@ -203,12 +300,11 @@ export function ProfessorDashboard({ user }: Props) {
 
       <div className="glass-card pastel-border rounded-2xl p-6 shadow-xl">
         <h3 className="mb-4 text-2xl font-bold text-pastel-dark">
-          Mis cupos creados
+          Mis clases publicadas
         </h3>
         {slots.length === 0 ? (
           <p className="text-sm text-gray-500">
-            Aún no has creado ningún cupo. Usa el formulario de arriba para
-            crear uno.
+            Aún no has publicado ninguna clase.
           </p>
         ) : (
           <div className="space-y-3">
@@ -219,43 +315,40 @@ export function ProfessorDashboard({ user }: Props) {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="h-4 w-4 text-pastel-primary" />
-                      <p className="text-lg font-semibold text-pastel-dark">
-                        {new Date(slot.date).toLocaleString("es-ES", {
-                          dateStyle: "full",
-                          timeStyle: "short",
-                        })}
-                      </p>
+                    <div className="flex flex-col gap-1 mb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-pastel-primary">
+                        {slot.description || "Clase"}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <p className="text-lg font-semibold text-pastel-dark">
+                          {new Date(slot.date).toLocaleString("es-ES", {
+                            dateStyle: "full",
+                            timeStyle: "short",
+                          })}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span>
-                          {slot.currentStudents}/{slot.maxStudents} estudiantes
-                        </span>
+
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                      <div className="flex items-center gap-1 font-medium text-gray-900">
+                        <DollarSign className="h-3 w-3" />
+                        {slot.price.toLocaleString("es-CL")}
+                      </div>
+                      <div className="flex gap-1">
+                        {slot.allowedModalities.map(m => (
+                          <span key={m} className="px-2 py-0.5 rounded-md bg-gray-100 text-xs capitalize">{m}</span>
+                        ))}
                       </div>
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          slot.status === "open"
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${slot.status === "open"
                             ? "bg-green-100 text-green-700"
-                            : slot.status === "full"
-                            ? "bg-yellow-100 text-yellow-700"
                             : "bg-gray-100 text-gray-700"
-                        }`}
+                          }`}
                       >
-                        {slot.status === "open"
-                          ? "Abierto"
-                          : slot.status === "full"
-                          ? "Lleno"
-                          : "Cerrado"}
+                        {slot.status === "open" ? "Activo" : "Cerrado"}
                       </span>
                     </div>
-                    {slot.students.length > 0 && (
-                      <div className="mt-2 text-xs text-gray-500">
-                        Estudiantes: {slot.students.join(", ")}
-                      </div>
-                    )}
                   </div>
                   <div className="flex gap-2">
                     {slot.status === "open" && (
@@ -282,4 +375,3 @@ export function ProfessorDashboard({ user }: Props) {
     </div>
   );
 }
-
