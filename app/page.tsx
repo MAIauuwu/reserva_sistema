@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, Clock3, MailCheck, Users } from "lucide-react";
+import { Calendar, Clock3, MailCheck, Users, ShoppingCart } from "lucide-react";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { useCart } from "@/context/CartContext";
 import { onAuthStateChanged, type User, signOut } from "firebase/auth";
 import { auth, db } from "@/firebase/client-config";
 import { ClientRegistration } from "@/components/ClientRegistration";
@@ -146,6 +147,7 @@ function BookingCalendar({ email, name, canBook }: BookingCalendarProps) {
 }
 
 export default function Home() {
+  const { toggleCart, items } = useCart();
   const [showRegistration, setShowRegistration] = useState(false);
   const [viewerEmail, setViewerEmail] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -219,6 +221,18 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-pastel-secondary py-12">
       <div className="fixed top-6 right-6 z-50 flex items-center gap-4">
+        <button
+          onClick={toggleCart}
+          className="flex items-center gap-2 rounded-full bg-pastel-primary px-6 py-3 text-sm font-bold uppercase tracking-wide text-pastel-dark shadow-xl transition hover:bg-pastel-highlight hover:scale-105"
+        >
+          <ShoppingCart className="h-5 w-5" />
+          Compra tu asesoría
+          {items.length > 0 && (
+            <span className="ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-extrabold text-pastel-dark">
+              {items.length}
+            </span>
+          )}
+        </button>
         <div>
           <button
             className="rounded-full bg-action-danger px-6 py-3 text-sm font-semibold uppercase tracking-wide text-black shadow-xl transition hover:bg-red-700"
