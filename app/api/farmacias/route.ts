@@ -9,20 +9,28 @@ async function proxyFetch() {
 		'User-Agent': 'Next.js Server Proxy',
 	} as Record<string, string>;
 
-	let res = await fetch(REMOTE_URL, { 
-		method: 'GET', 
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+	let res = await fetch(REMOTE_URL, {
+		method: 'GET',
 		headers: defaultHeaders,
-		cache: 'no-store'
-	});
+		cache: 'no-store',
+		signal: controller.signal
+	}).finally(() => clearTimeout(timeoutId));
 
 	if (!res.ok) {
 		// Try POST as fallback
 		try {
-			res = await fetch(REMOTE_URL, { 
-				method: 'POST', 
+			const controllerPost = new AbortController();
+			const timeoutIdPost = setTimeout(() => controllerPost.abort(), 10000);
+
+			res = await fetch(REMOTE_URL, {
+				method: 'POST',
 				headers: { ...defaultHeaders, 'Content-Type': 'application/json' },
-				cache: 'no-store'
-			});
+				cache: 'no-store',
+				signal: controllerPost.signal
+			}).finally(() => clearTimeout(timeoutIdPost));
 		} catch (e) {
 			// swallow and continue to error handling below
 		}
@@ -54,21 +62,21 @@ export async function GET() {
 	try {
 		const result = await proxyFetch();
 		if (!result.ok) {
-			return NextResponse.json({ 
-				success: false, 
-				error: result.body || 'Remote API error', 
+			return NextResponse.json({
+				success: false,
+				error: result.body || 'Remote API error',
 				status: result.status ?? 502,
 				rawBody: result.body
 			}, { status: 502 });
 		}
-		
+
 		// Return both structured and raw formats
 		const responseData = Array.isArray(result.data) ? result.data : result.data?.data || [];
 		return NextResponse.json(responseData, { status: 200 });
 	} catch (err) {
 		console.error('[Proxy] Error:', err);
-		return NextResponse.json({ 
-			success: false, 
+		return NextResponse.json({
+			success: false,
 			error: 'Internal server error',
 			details: err instanceof Error ? err.message : String(err)
 		}, { status: 500 });
