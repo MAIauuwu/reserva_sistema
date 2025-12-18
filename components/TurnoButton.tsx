@@ -23,7 +23,6 @@ export function TurnoButton() {
   const [showModal, setShowModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [rawResponse, setRawResponse] = useState<string | null>(null);
-  const [showRaw, setShowRaw] = useState(false);
   const [selectedComuna, setSelectedComuna] = useState<string>('');
 
   const normalizeRaw = (r: RawFarmacia): Farmacia => {
@@ -49,42 +48,31 @@ export function TurnoButton() {
 
   const comunas = Array.from(new Set(farmacias.map((f) => f.comuna).filter(Boolean))).sort();
 
-  // Función para verificar si una farmacia está de turno hoy
   const isOpenToday = (farmacia: Farmacia): boolean => {
     if (!farmacia.fecha_inicio || !farmacia.fecha_termino) {
-      return true; // Si no tiene fechas, asumimos que siempre está disponible
+      return true;
     }
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     try {
-      // Parsear fechas (puede ser DD/MM/YYYY o YYYY-MM-DD)
       const parseDate = (dateStr: string): Date => {
         const parts = dateStr.includes('/')
           ? dateStr.split('/')
           : dateStr.split('-');
-
         if (dateStr.includes('/')) {
-          // DD/MM/YYYY
           return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
         } else {
-          // YYYY-MM-DD
           return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
         }
       };
-
       const inicio = parseDate(farmacia.fecha_inicio);
       const termino = parseDate(farmacia.fecha_termino);
-
       return today >= inicio && today <= termino;
     } catch (e) {
-      console.warn('Error parsing dates for farmacia:', farmacia.nombre_local, e);
       return true;
     }
   };
 
-  // Filtrar por comuna Y por fecha actual
   const filtered = farmacias.filter((f) => {
     const matchComuna = !selectedComuna || f.comuna === selectedComuna;
     const matchDate = isOpenToday(f);
@@ -97,17 +85,13 @@ export function TurnoButton() {
       const LOCAL_API = '/api/farmacias';
       const REMOTE_API = 'https://midas.minsal.cl/farmacia_v2/WS/getLocalesTurnos.php';
 
-      // Try local proxy first
       try {
         const response = await fetch(LOCAL_API, { cache: 'no-store' });
         if (response.ok) {
-          const text = await response.text().catch(() => '');
+          const text = await response.text();
           setRawResponse(text);
-          console.log('[Local Proxy] Response:', text.slice(0, 200));
-
           const parsed = text ? JSON.parse(text) : null;
 
-          // Check if it's directly an array (new format)
           if (Array.isArray(parsed) && parsed.length > 0) {
             const normalized = (parsed as RawFarmacia[]).map(normalizeRaw);
             setFarmacias(normalized);
@@ -115,8 +99,6 @@ export function TurnoButton() {
             setShowModal(true);
             return;
           }
-
-          // Check if it's { data: [...] } format (old format)
           const body = parsed as { success?: boolean; data?: RawFarmacia[]; error?: string } | null;
           if (body?.success && Array.isArray(body.data) && body.data.length > 0) {
             const normalized = body.data.map(normalizeRaw);
@@ -130,24 +112,12 @@ export function TurnoButton() {
         console.warn('[Local Proxy] Failed:', e);
       }
 
-      // Fallback 1: allorigins.win
       try {
-        console.log('[Fallback 1] Trying api.allorigins.win...');
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(REMOTE_API)}`;
         const resp = await fetch(proxyUrl, { cache: 'no-store' });
         if (!resp.ok) throw new Error(`Status ${resp.status}`);
-
         const text = await resp.text();
-        setRawResponse(text);
-        console.log('[Fallback 1] Response length:', text.length, 'First 300 chars:', text.slice(0, 300));
-
-        let parsed;
-        try {
-          parsed = JSON.parse(text);
-        } catch (parseErr) {
-          console.warn('[Fallback 1] JSON parse failed:', parseErr);
-          throw new Error('Invalid JSON from proxy');
-        }
+        const parsed = JSON.parse(text);
 
         if (Array.isArray(parsed) && parsed.length > 0) {
           const normalized = (parsed as RawFarmacia[]).map(normalizeRaw);
@@ -156,25 +126,20 @@ export function TurnoButton() {
           setShowModal(true);
           return;
         }
-
-        if (parsed?.data && Array.isArray(parsed.data) && parsed.data.length > 0) {
+        if (parsed?.data && Array.isArray(parsed.data)) {
           const normalized = (parsed.data as RawFarmacia[]).map(normalizeRaw);
           setFarmacias(normalized);
           setErrorMessage(null);
           setShowModal(true);
           return;
         }
-
-        throw new Error('No array found in response');
       } catch (fallbackErr) {
         console.warn('[Fallback 1] Failed:', fallbackErr);
       }
 
-      // If both failed, show error with raw data
       setErrorMessage('No se pudo obtener la lista de farmacias. Revisa la consola del navegador.');
       setShowModal(true);
     } catch (error) {
-      console.error('Unexpected error fetching farmacias:', error);
       setErrorMessage('Error inesperado al obtener farmacias.');
       setShowModal(true);
     } finally {
@@ -186,17 +151,13 @@ export function TurnoButton() {
     <>
       <style>{`
         @keyframes pulse-glow {
-          0%, 100% {
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-          }
-          50% {
-            box-shadow: 0 0 30px rgba(239, 68, 68, 0.9);
-          }
+          0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+          50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.9); }
         }
-        
-        .pulsing-button {
-          animation: pulse-glow 1.5s ease-in-out infinite;
-        }
+        .pulsing-button { animation: pulse-glow 1.5s ease-in-out infinite; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
       `}</style>
 
       <button
@@ -210,38 +171,38 @@ export function TurnoButton() {
 
       {showModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 sm:p-10 shadow-2xl custom-scrollbar">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-6 w-6 text-red-500" />
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Farmacias de Turno
-                </h2>
-              </div>
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition"
-                title="Cerrar"
-              >
-                ✕
-              </button>
-            </div>
-            <p className="mb-6 text-sm text-gray-500">
-              📅 {new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
+          <div className="w-full max-w-5xl h-[85vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden">
 
-            <div className="flex flex-col gap-6">
-              {/* Filter Section - Top */}
+            {/* Header + Filter Section (Fixed at Top) */}
+            <div className="flex-shrink-0 bg-white p-6 sm:p-8 border-b border-gray-100 z-10 shadow-sm relative">
+              <div className="flex items-center justify-between gap-3 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="bg-red-100 p-2 rounded-full">
+                    <AlertCircle className="h-6 w-6 text-red-500" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Farmacias de Turno
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition"
+                  title="Cerrar"
+                >
+                  ✕
+                </button>
+              </div>
+
               <div className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <label className="text-sm font-bold text-gray-700 flex items-center gap-2 whitespace-nowrap">
                     📍 Filtrar por Comuna:
                   </label>
-                  <div className="relative w-full sm:w-64">
+                  <div className="relative w-full">
                     <select
                       value={selectedComuna}
                       onChange={(e) => setSelectedComuna(e.target.value)}
-                      className="w-full appearance-none rounded-lg border-2 border-slate-200 bg-white py-2 pl-4 pr-10 text-sm font-medium text-gray-700 focus:border-red-500 focus:outline-none"
+                      className="w-full appearance-none rounded-lg border-2 border-slate-200 bg-white py-2 pl-4 pr-10 text-sm font-medium text-gray-700 focus:border-red-500 focus:outline-none transition-colors hover:border-red-200"
                     >
                       <option value="">Todas las comunas ({comunas.length})</option>
                       {comunas.map((c) => (
@@ -254,89 +215,85 @@ export function TurnoButton() {
                   </div>
                 </div>
               </div>
-
-              {/* List Section - Full Width */}
-              <div className="flex-1 min-h-[300px]">
-                {errorMessage ? (
-                  <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-                    <p className="text-lg font-bold text-red-700 mb-2">¡Ups! Algo salió mal</p>
-                    <p className="text-sm text-red-600 mb-4">{errorMessage}</p>
-                    <button
-                      onClick={fetchFarmacias}
-                      className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-full text-sm font-bold transition"
-                    >
-                      Intentar de nuevo
-                    </button>
-                    <p className="mt-6 text-xs text-gray-500">
-                      Si el problema persiste, puedes visitar el sitio oficial del <a href="https://farmanet.minsal.cl/maps/" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">Minsal</a>.
-                    </p>
-                  </div>
-                ) : farmacias.length > 0 ? (
-                  <div>
-                    <div className="mb-4 flex items-center justify-between px-2">
-                      <p className="text-sm font-medium text-gray-500">
-                        Mostrando farmacias de turno para hoy
-                      </p>
-                      <p className="text-sm font-bold text-gray-900 border-b-2 border-red-500 pb-0.5">
-                        {filtered.length} Resultados
-                      </p>
-                    </div>
-                    <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
-                      {filtered.map((farmacia) => (
-                        <div
-                          key={farmacia.local_id}
-                          className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md transition-all hover:border-red-100"
-                        >
-                          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition">
-                            <AlertCircle className="h-12 w-12 text-red-500" />
-                          </div>
-                          <div className="relative z-10">
-                            <span className="mb-1 inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-600">
-                              {farmacia.comuna}
-                            </span>
-                            <h3 className="text-xl font-bold text-gray-900 leading-tight">
-                              {farmacia.nombre_local}
-                            </h3>
-                            <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-gray-600">
-                              <div className="space-y-1">
-                                <p className="flex items-center gap-2">
-                                  <span>📍</span> {farmacia.direccion}
-                                </p>
-                                <p className="flex items-center gap-2">
-                                  <span>📞</span> {farmacia.telefono}
-                                </p>
-                              </div>
-
-                              {(farmacia.hora_apertura || farmacia.hora_cierre) && (
-                                <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-green-800 text-xs font-bold border border-green-100 w-fit whitespace-nowrap">
-                                  <span className="text-lg">🕒</span>
-                                  <span>{farmacia.hora_apertura} - {farmacia.hora_cierre}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="py-12 text-center">
-                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-4xl">
-                      💊
-                    </div>
-                    <p className="text-xl font-bold text-gray-800 mb-2">No se encontraron farmacias</p>
-                    <p className="text-gray-500">Prueba cambiando el filtro de comuna o intenta más tarde.</p>
-                  </div>
-                )}
-              </div>
             </div>
 
-            <button
-              onClick={() => setShowModal(false)}
-              className="mt-6 w-full rounded-full bg-slate-900 px-6 py-4 text-white font-bold tracking-wide shadow-lg transition hover:bg-slate-800 hover:scale-[1.01]"
-            >
-              Cerrar listado
-            </button>
+            {/* Scrollable List Section (Takes Remaining Height) */}
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-gray-50 custom-scrollbar">
+              {errorMessage ? (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                  <div className="bg-red-100 rounded-full p-4 mb-4">
+                    <AlertCircle className="h-10 w-10 text-red-500" />
+                  </div>
+                  <p className="text-lg font-bold text-red-700 mb-2">¡Ups! Algo salió mal</p>
+                  <p className="text-sm text-red-600 mb-6 max-w-md">{errorMessage}</p>
+                  <button
+                    onClick={fetchFarmacias}
+                    className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition shadow-lg shadow-red-200"
+                  >
+                    Intentar de nuevo
+                  </button>
+                  <p className="mt-8 text-xs text-gray-500">
+                    <a href="https://farmanet.minsal.cl/maps/" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">Ver en sitio oficial Minsal</a>
+                  </p>
+                </div>
+              ) : farmacias.length > 0 ? (
+                <div className="max-w-4xl mx-auto">
+                  <div className="mb-4 flex items-center justify-between px-2">
+                    <p className="text-sm font-medium text-gray-500">
+                      Mostrando farmacias de turno para hoy
+                    </p>
+                    <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">
+                      {filtered.length} Resultados
+                    </span>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+                    {filtered.map((farmacia) => (
+                      <div
+                        key={farmacia.local_id}
+                        className="group relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm border border-gray-100 hover:shadow-md hover:border-red-200 transition-all"
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-[0.03] group-hover:opacity-10 transition">
+                          <AlertCircle className="h-24 w-24 text-red-500" />
+                        </div>
+                        <div className="relative z-10 flex flex-col h-full justify-between">
+                          <div>
+                            <span className="mb-2 inline-block rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                              {farmacia.comuna}
+                            </span>
+                            <h3 className="text-lg font-bold text-gray-900 leading-tight mb-3">
+                              {farmacia.nombre_local}
+                            </h3>
+                            <div className="space-y-2 text-sm text-gray-600">
+                              <p className="flex items-start gap-2">
+                                <span className="mt-0.5">📍</span> {farmacia.direccion}
+                              </p>
+                              <p className="flex items-center gap-2">
+                                <span>📞</span> {farmacia.telefono}
+                              </p>
+                            </div>
+                          </div>
+
+                          {(farmacia.hora_apertura || farmacia.hora_cierre) && (
+                            <div className="mt-4 pt-3 border-t border-gray-50 flex items-center gap-2 text-xs font-bold text-green-700">
+                              <span className="text-base">🕒</span>
+                              <span>{farmacia.hora_apertura} - {farmacia.hora_cierre}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center">
+                  <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm text-4xl">
+                    💊
+                  </div>
+                  <p className="text-xl font-bold text-gray-800 mb-2">No se encontraron farmacias</p>
+                  <p className="text-gray-500">Prueba cambiando el filtro de comuna.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
