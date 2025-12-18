@@ -113,8 +113,14 @@ export function AuthSidebar({ isOpen, onClose, onAuthenticated }: Props) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/20 backdrop-blur-sm transition animate-in fade-in">
-            <div className="h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-2xl transition-transform sm:w-[450px] animate-in slide-in-from-right">
+        <div
+            className="fixed inset-0 z-50 flex justify-end bg-black/20 backdrop-blur-sm transition animate-in fade-in"
+            onClick={onClose}
+        >
+            <div
+                className="h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-2xl transition-transform sm:w-[450px] animate-in slide-in-from-right"
+                onClick={(e) => e.stopPropagation()}
+            >
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">

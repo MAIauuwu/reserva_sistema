@@ -103,8 +103,15 @@ export function Cart() {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/20 backdrop-blur-sm transition animate-in fade-in">
-            <div className="h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-2xl transition-transform sm:w-[500px] animate-in slide-in-from-right">
+
+        <div
+            className="fixed inset-0 z-50 flex justify-end bg-black/20 backdrop-blur-sm transition animate-in fade-in"
+            onClick={toggleCart} // Close when clicking backdrop
+        >
+            <div
+                className="h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-2xl transition-transform sm:w-[500px] animate-in slide-in-from-right"
+                onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside
+            >
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold text-pastel-dark flex items-center gap-2">
                         <ShoppingCart className="h-6 w-6" />
@@ -126,7 +133,10 @@ export function Cart() {
                         <ShoppingCart className="h-16 w-16 mb-4 opacity-20" />
                         <p>Tu carrito está vacío.</p>
                         <button
-                            onClick={toggleCart}
+                            onClick={() => {
+                                toggleCart();
+                                document.getElementById("calendario")?.scrollIntoView({ behavior: "smooth" });
+                            }}
                             className="mt-4 text-pastel-primary font-semibold hover:underline"
                         >
                             Volver a cupos
@@ -253,8 +263,8 @@ export function Cart() {
                                         type="button"
                                         onClick={() => setPaymentMethod("webpay")}
                                         className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition group ${paymentMethod === "webpay"
-                                                ? "border-pastel-primary bg-pastel-primary/5"
-                                                : "border-gray-100 hover:border-pastel-primary/50 hover:bg-white"
+                                            ? "border-pastel-primary bg-pastel-primary/5"
+                                            : "border-gray-100 hover:border-pastel-primary/50 hover:bg-white"
                                             }`}
                                     >
                                         <span className="flex items-center gap-3 font-medium text-gray-700">
@@ -270,8 +280,8 @@ export function Cart() {
                                         type="button"
                                         onClick={() => setPaymentMethod("transfer")}
                                         className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition group ${paymentMethod === "transfer"
-                                                ? "border-pastel-primary bg-pastel-primary/5"
-                                                : "border-gray-100 hover:border-pastel-primary/50 hover:bg-white"
+                                            ? "border-pastel-primary bg-pastel-primary/5"
+                                            : "border-gray-100 hover:border-pastel-primary/50 hover:bg-white"
                                             }`}
                                     >
                                         <span className="flex items-center gap-3 font-medium text-gray-700">
