@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { AlertCircle } from "lucide-react";
 
 interface Farmacia {
@@ -24,6 +25,11 @@ export function TurnoButton() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [rawResponse, setRawResponse] = useState<string | null>(null);
   const [selectedComuna, setSelectedComuna] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const normalizeRaw = (r: RawFarmacia): Farmacia => {
     const get = (keys: string[]) => {
@@ -169,9 +175,9 @@ export function TurnoButton() {
         {loading ? "Cargando..." : "FARMACIA DE TURNO"}
       </button>
 
-      {showModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-5xl h-[85vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden">
+      {showModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-5xl max-h-[85vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
 
             {/* Header + Filter Section (Fixed at Top) */}
             <div className="flex-shrink-0 bg-white p-6 sm:p-8 border-b border-gray-100 z-10 shadow-sm relative">
@@ -180,7 +186,7 @@ export function TurnoButton() {
                   <div className="bg-red-100 p-2 rounded-full">
                     <AlertCircle className="h-6 w-6 text-red-500" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-2xl font-bold text-gray-900 leading-none">
                     Farmacias de Turno
                   </h2>
                 </div>
@@ -295,7 +301,8 @@ export function TurnoButton() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
